@@ -60,7 +60,7 @@ ros2 launch transform_helpers bringup.launch.py
 
 ### step 1.5
 
-While the default setup is running, check out the transforms by going to a new terminal and running the below. After a couple seconds this should spit out a PDF you can open to view the transform hierarchy. What is the name of the wrist joint in this hierarchy? Note: You can also see transforms in RViz with frame names overlaid.
+While the default setup is running, check out the transforms by going to a new terminal and running the below. After a couple seconds this should spit out a PDF you can open to view the transform hierarchy. What is the name of the transformation corresponding to the wrist joint (the penultimate joint in the chain) in this hierarchy? Note: You can also see transforms in RViz with frame names overlaid.
 ```
 ros2 run tf2_tools view_frames
 ```
