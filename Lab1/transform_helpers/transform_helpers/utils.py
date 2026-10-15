@@ -14,3 +14,26 @@ def rotmat2q(T: NDArray) -> Quaternion:
     raise NotImplementedError
 
     return q
+
+def quat2rodrigues(q: Quaternion) -> NDArray:
+    # Function that transforms a ROS quaternion representation to the Rodrigues
+    
+    # The returned variable should contain a 3 element array in the direction
+    # of the rotation axis with magnitude equal to the rotation angle
+
+    # TODO: implement this
+    raise NotImplementedError
+
+    return T
+
+def quat2zyx(q: Quaternion) -> NDArray:
+    # Function that transforms a ROS quaternion representation to three Euler
+    # angles corresponding to the intrinsic Tait-Bryan Z-Y-X representation
+    # 
+    
+    # The returned variable should contain a 3 element array of the Euler angles
+
+    # TODO: implement this
+    raise NotImplementedError
+
+    return T
