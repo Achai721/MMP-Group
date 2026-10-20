@@ -2,12 +2,13 @@ import rclpy
 from rclpy.node import Node
 # TODO: Import the message type that holds data describing robot joint angle states
 # this tutorial may have hints: https://docs.ros.org/en/rolling/Tutorials/Intermediate/URDF/Using-URDF-with-Robot-State-Publisher.html#publish-the-state
-
+from sensor_msgs.msg import JointState
 # TODO: Import the class that publishes coordinate frame transform information
 # this tutorial may have hints: https://docs.ros.org/en/rolling/Tutorials/Intermediate/Tf2/Writing-A-Tf2-Listener-Py.html
-
+from tf2_ros import TransformBroadcaster
 # TODO: Import the message type that expresses a transform from one coordinate frame to another
 # this same tutorial from earlier has hints: https://docs.ros.org/en/rolling/Tutorials/Intermediate/Tf2/Writing-A-Tf2-Listener-Py.html
+from geometry_msgs.msg import TransformStamped
 
 import numpy as np
 from numpy.typing import NDArray
@@ -40,7 +41,21 @@ def get_transform_n_to_n_minus_one(n: int, theta: float) -> NDArray:
     # TODO: implement this function
     # note that it may be helpful to refer to documentation on modified denavit hartenberg parameters:
     # https://en.wikipedia.org/wiki/Denavit%E2%80%93Hartenberg_parameters#Modified_DH_parameters
-    raise NotImplementedError
+    a, d, alpha, theta_offset = DH_PARAMS[n_minus_one]
+    # why for the minus one index? because the first link is the base, which has no joint, so the first joint is actually between link 0 and link 1, which is why we need to use n-1 to get the correct parameters for the transform from link n to link n-1
+    theta = theta + theta_offset
+
+    ct, st = np.cos(theta), np.sin(theta)
+    ca, sa = np.cos(alpha), np.sin(alpha)
+
+    transform_matrix = np.array([
+        [ct,      -st,      0.0,  a],
+        [st * ca,  ct * ca, -sa, -d * sa],
+        [st * sa,  ct * sa,  ca,  d * ca],
+        [0.0,      0.0,     0.0,  1.0],
+    ])
+
+    return transform_matrix
 
 
 
@@ -51,7 +66,14 @@ class ForwardKinematicCalculator(Node):
 
         # TODO: create a subscriber to joint states, can you find which topic
         # this publishes on by using ros2 topic list while running the example?
-        raise NotImplementedError
+        
+        self.joint_sub = self.create_subscription(
+            JointState,
+            '/joint_states',
+            self.publish_transforms,
+            10
+        )
+        # what is this line doing? why is it here?
         self.joint_sub  # prevent unused variable warning
 
         # Initialize the transform broadcaster
@@ -98,7 +120,11 @@ class ForwardKinematicCalculator(Node):
             # TODO: set the translation and rotation in the message we have created
             # you can check the documentation for the message type for ros2
             # to see what members it has
-            raise NotImplementedError
+            t.transform.translation.x = float(transform[0, 3])
+            t.transform.translation.y = float(transform[1, 3])
+            t.transform.translation.z = float(transform[2, 3])
+            # why is [2, 3] the z translation? because the transform matrix is a 4x4 matrix, and the last column is the translation vector, so the first three elements of that column are the x, y, and z translations respectively
+            t.transform.rotation = quat
 
             self.tf_broadcaster.sendTransform(t)
     
@@ -110,6 +136,8 @@ def main(args=None):
 
     # TODO: initialize our class and start it spinning
     # this example may be helpful: https://docs.ros.org/en/humble/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Py-Publisher-And-Subscriber.html#write-the-subscriber-node
+    fk_calculator = ForwardKinematicCalculator()
+    rclpy.spin(fk_calculator)#what is the rclpy?
 
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
@@ -120,3 +148,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
