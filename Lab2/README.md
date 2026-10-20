@@ -43,7 +43,6 @@ ros2 launch trajectory_demo bringup.launch.py urdf_package:=franka_description u
 
 Now launch a new terminal on your ubuntu and publish a trajectory. The robot should move.
 ```
-docker exec -it $(docker ps -lq) bash
 cd home/ros_ws
 source install/setup.bash
 ros2 topic pub -1 /franka_arm_controller/joint_trajectory trajectory_msgs/msg/JointTrajectory "{joint_names: ['fr3_joint1', 'fr3_joint2', 'fr3_joint3', 'fr3_joint4', 'fr3_joint5', 'fr3_joint6', 'fr3_joint7'], points: [{positions: [0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0], time_from_start: {sec: 1.0}}]}"
@@ -61,7 +60,7 @@ It should result in the end effector meeting the goal position (with no regard f
 
 ![franka_traj](assets/franka_initial_ik.png)
 
-Submit your trajectory plotted. Note to get a file out of a docker container you will need to save it to a volume mount, so save it to the COMP0246_Labs directory inside of the `ros_ws/src` folder which is mounted. This will let you access an image from outside of the docker container.
+Submit your trajectory plotted.
 
 
 ### step 2
