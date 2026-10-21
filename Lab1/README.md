@@ -36,7 +36,7 @@ cd ros2_ws
 git clone https://github.com/surgical-vision/COMP0246_S26_Labs src/COMP0246_Labs
 ```
 ### step 1
-This lab depends on some stuff like tf2 and rviz2. rosdep documentation is available [here](https://docs.ros.org/en/rolling/Tutorials/Intermediate/Rosdep.html). You can install this via rosdep. If you haven't installed this before, install rosdep. If linux `sudo apt-get install python3-rosdep` else `pip install rosdep` may work or do your own research. 
+This lab depends on some stuff like tf2 and rviz2. rosdep documentation is available [here](https://docs.ros.org/en/humble/Tutorials/Intermediate/Rosdep.html). You can install this via rosdep. If you haven't installed this before, install rosdep. If linux `sudo apt-get install python3-rosdep` else `pip install rosdep` may work or do your own research. 
 
 Once installed, if you've never used it:
 ```
@@ -52,6 +52,7 @@ rosdep install --from-paths ./ -y --ignore-src
 ### step 1.4
 compile and run the code (hopefully successfully)
 ```
+source /opt/ros/humble/setup.bash
 colcon build
 source install/setup.bash
 ros2 launch transform_helpers bringup.launch.py
@@ -59,7 +60,7 @@ ros2 launch transform_helpers bringup.launch.py
 
 ### step 1.5
 
-While the default setup is running, check out the transforms by going to a new terminal and running the below. After a couple seconds this should spit out a PDF you can open to view the transform hierarchy. What is the name of the wrist joint in this hierarchy? Note: You can also see transforms in RViz with frame names overlaid.
+While the default setup is running, check out the transforms by going to a new terminal and running the below. After a couple seconds this should spit out a PDF you can open to view the transform hierarchy. What is the name of the transformation corresponding to the wrist joint (the penultimate joint in the chain) in this hierarchy? Note: You can also see transforms in RViz with frame names overlaid.
 ```
 ros2 run tf2_tools view_frames
 ```
@@ -72,11 +73,11 @@ ros2 topic echo --once /tf
 ```
 
 ### step 1.7
-The URDF file is a way to represent a robot. It has a series of rigid links that are connected by joints. How many links do you see in the URDF file [here](../franka_description/urdfs/fr3.urdf) and why is this more than 7, the number of joints that the robot has? [This](https://docs.ros.org/en/rolling/Tutorials/Intermediate/URDF/Building-a-Visual-Robot-Model-with-URDF-from-Scratch.html) may be helpful in background on URDF files.
+The URDF file is a way to represent a robot. It has a series of rigid links that are connected by joints. How many links do you see in the URDF file [here](../franka_description/urdfs/fr3.urdf) and why is this more than 7, the number of joints that the robot has? [This](https://docs.ros.org/en/humble/Tutorials/Intermediate/URDF/Building-a-Visual-Robot-Model-with-URDF-from-Scratch.html) may be helpful in background on URDF files.
 
 ### step 2
 
-Now we will implement our own forward kinematics using Denavit-Hartenberg parameters. We can find them for the Franka FR3 robot arm [here](https://frankaemika.github.io/docs/control_parameters.html#denavithartenberg-parameters) which uses the Craig convention meaning modified DH parameters. We will try to mimick the behavior we saw in step 1. The file in this repo [here](./transform_helpers/transform_helpers/main.py) has some starter code and some TODO items for you. Also the file utils.py [here](./transform_helpers/transform_helpers/utils.py) needs some changes. You will need to edit the files in transform_helpers/transform_helpers in your local copy. Implement the TODO list within each file. 
+Now we will implement our own forward kinematics using Denavit-Hartenberg parameters. We can find them for the Franka FR3 robot arm [here](https://github.com/frankarobotics/docs/blob/master/source/robot_specifications.rst) which uses the Craig convention meaning modified DH parameters. We will try to mimick the behavior we saw in step 1. The file in this repo [here](./transform_helpers/transform_helpers/main.py) has some starter code and some TODO items for you. Also the file utils.py [here](./transform_helpers/transform_helpers/utils.py) needs some changes. You will need to edit the files in transform_helpers/transform_helpers in your local copy. Implement the TODO list within each file. 
 
 From here, in one terminal you will rebuild the package and run the `ros2 launch transform_helpers bringup.launch.py` command.
 ```
