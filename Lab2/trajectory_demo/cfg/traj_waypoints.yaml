@@ -2,5 +2,29 @@
 joint_names: ["fr3_joint1", "fr3_joint2", "fr3_joint3", "fr3_joint4", "fr3_joint5", "fr3_joint6", "fr3_joint7"]
 waypoints:
   cartesion: # meters
-    - position: [0.4, 0.0, 0.001]
-      time: 1.0
+    - position: [0.40, 0.2, 0.001]
+      time: 15.0
+    - position: [0.35, 0.2, 0.001]
+      time: 1.5
+    - position: [0.301, 0.2, 0.001]
+      time: 1.5
+    - position: [0.30, 0.2, 0.001]
+      time: 1.5
+    - position: [0.25, 0.2, 0.001]
+      time: 1.5
+    - position: [0.20, 0.2, 0.001]
+      time: 1.5
+    - position: [0.25, 0.225, 0.001]
+      time: 1.5
+    - position: [0.30, 0.25, 0.001]
+      time: 1.5
+    - position: [0.25, 0.275, 0.001]
+      time: 1.5
+    - position: [0.20, 0.30, 0.001]
+      time: 1.5
+    - position: [0.30, 0.30, 0.001]
+      time: 1.5
+    - position: [0.40, 0.30, 0.001]
+      time: 1.5
+
+    
