@@ -1,0 +1,64 @@
+# This config file is used by traj_demo to generate a trajectory
+joint_names: ["fr3_joint1", "fr3_joint2", "fr3_joint3", "fr3_joint4", "fr3_joint5", "fr3_joint6", "fr3_joint7"]
+waypoints:
+  cartesion: # meters
+    # - position: [0.40, 0.00, 0.015]
+    #   time: 2.0
+    - position: [0.40, 0.00, 0.001]
+      time: 2.0
+    # left stroke (x = 0.4), up to the top of the M
+    - position: [0.40, 0.0125, 0.001]
+      time: 1.0
+    - position: [0.40, 0.025, 0.001]
+      time: 1.0
+    - position: [0.40, 0.0375, 0.001]
+      time: 1.0
+    - position: [0.40, 0.050, 0.001]
+      time: 1.0
+    - position: [0.40, 0.0625, 0.001]
+      time: 1.0
+    - position: [0.40, 0.075, 0.001]
+      time: 1.0
+    - position: [0.40, 0.0875, 0.001]
+      time: 1.0
+    - position: [0.40, 0.10, 0.001]
+      time: 1.0
+    # first diagonal, down to the vertex
+    - position: [0.425, 0.09375, 0.001]
+      time: 1.5
+    - position: [0.45, 0.0875, 0.001]
+      time: 1.5
+    - position: [0.475, 0.08125, 0.001]
+      time: 1.5
+    - position: [0.50, 0.075, 0.001]
+      time: 1.5
+    # second diagonal, back up
+    - position: [0.525, 0.08125, 0.001]
+      time: 1.5
+    - position: [0.55, 0.0875, 0.001]
+      time: 1.5
+    - position: [0.575, 0.09375, 0.001]
+      time: 1.5
+    - position: [0.60, 0.10, 0.001]
+      time: 1.5
+    # right stroke (x = 0.6), down to the bottom
+    - position: [0.60, 0.0875, 0.001]
+      time: 1.0
+    - position: [0.60, 0.075, 0.001]
+      time: 1.0
+    - position: [0.60, 0.0625, 0.001]
+      time: 1.0
+    - position: [0.60, 0.050, 0.001]
+      time: 1.0
+    - position: [0.60, 0.0375, 0.001]
+      time: 1.0
+    - position: [0.60, 0.025, 0.001]
+      time: 1.0
+    - position: [0.60, 0.0125, 0.001]
+      time: 1.0
+    - position: [0.60, 0.00, 0.001]
+      time: 1.0
+
+
+  
+

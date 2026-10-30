@@ -6,6 +6,7 @@ from numpy.typing import NDArray
 import os
 
 from sensor_msgs.msg import JointState
+from geometry_msgs.msg import Quaternion
 from tf2_ros import TransformBroadcaster
 from geometry_msgs.msg import TransformStamped, Quaternion
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
@@ -21,6 +22,7 @@ from tf2_ros import LookupException, ConnectivityException, ExtrapolationExcepti
 import PyKDL
 from youbot_kinematics.urdf import treeFromUrdfModel
 from youbot_kinematics.urdf_parser import URDF
+# from utils import quat2zyx
 
 from ament_index_python.packages import get_package_share_directory
 
@@ -123,6 +125,11 @@ class TrajDemo(Node):
         self.ee_z_all = []
         self.times_all = []
 
+        self.traj_start_ns = None   
+        self.traj_end_ns = None 
+        self.traj_planned_duration = None   
+
+
     def joint_state_callback(self, msg: JointState):
         """Callback for the joint states of the robot arm. It will get joint positions and velocities, and eventually the cartesian position of the end-effector and save this. It allows initializes the trajectory once the first joint state message comes through.
 
@@ -155,11 +162,21 @@ class TrajDemo(Node):
             self.ee_y_all.append(ee_pos[1])
             self.ee_z_all.append(ee_pos[2])
 
-        # we do this after we have our first callback to have current joint positions
-        if not self.created_traj:
-            joint_traj = self.create_traj()
-            self.traj_publisher.publish(joint_traj)
-            self.created_traj = True
+            if self.traj_start_ns is not None and self.traj_end_ns is None:
+                final_wp = self.traj_cfg["waypoints"]["cartesion"][-1]["position"]
+                dist = np.linalg.norm(np.array(ee_pos)[:3] - np.array(final_wp))
+                if dist < 0.01:
+                    self.traj_end_ns = self.get_clock().now().nanoseconds
+                    self.get_logger().info(
+                        f"Trajectory finished in {(self.traj_end_ns - self.traj_start_ns) * 1e-9:.2f} s"
+                    )
+
+            # we do this after we have our first callback to have current joint positions
+            if not self.created_traj:
+                joint_traj = self.create_traj()
+                self.traj_publisher.publish(joint_traj)
+                self.traj_start_ns = self.get_clock().now().nanoseconds
+                self.created_traj = True
 
     def kdl_to_np(self, data: PyKDL.JntArray) -> NDArray:
         """Helper Function to go from KDL arrays to numpy arrays
@@ -180,6 +197,38 @@ class TrajDemo(Node):
             else:
                 mat[i] = data[i]
         return mat
+
+
+    def quat2zyx(self, q: Quaternion) -> NDArray:
+        # Function that transforms a ROS quaternion representation to three Euler
+        # angles corresponding to the intrinsic Tait-Bryan Z-Y-X representation
+        
+        # The returned variable should contain a 3 element array of the Euler angles
+
+        # TODO: implement this
+        # raise NotImplementedError
+
+        #Normalise the quaternion
+        norm_q = np.sqrt(q.w**2 + q.x**2 + q.y**2 + q.z**2)
+        q_normalised = Quaternion(w=q.w/norm_q, x=q.x/norm_q, y=q.y/norm_q, z=q.z/norm_q)
+
+        qn_w = q_normalised.w
+        qn_x = q_normalised.x
+        qn_y = q_normalised.y
+        qn_z = q_normalised.z
+
+        phi = np.arctan2(2*(qn_w*qn_x + qn_y*qn_z), 1 - 2*(qn_x**2 + qn_y**2))
+        theta = -np.pi/2 + 2*np.arctan2(np.sqrt(1 + 2*(qn_w*qn_y - qn_x*qn_z)), np.sqrt(1 - 2*(qn_w*qn_y - qn_x*qn_z)))
+        psi = np.arctan2(2*(qn_w*qn_z + qn_x*qn_y), 1 - 2*(qn_y**2 + qn_z**2))
+
+        # print(q_normalised)
+        # norm_qn = np.sqrt(q_normalised.w**2 + q_normalised.x**2 + q_normalised.y**2 + q_normalised.z**2)
+        # print(q_normalised)
+        # print(norm_qn)
+
+        T = np.array([phi, theta, psi])
+        return T
+
 
     def get_ee_pos_ros(self) -> Tuple[float]:
         """FK function that uses TF2 ROS to do forward kinematics and return world coordinates of the end effector.
@@ -204,9 +253,14 @@ class TrajDemo(Node):
             return None
 
         ee_pos_x, ee_pos_y, ee_pos_z = trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z
-        ee_rot_w, ee_rot_x, ee_rot_y, ee_rot_z = trans.transform.rotation.w, trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z
+        ee_rot_qw, ee_rot_qx, ee_rot_qy, ee_rot_qz = trans.transform.rotation.w, trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z
+        
+        qrot = Quaternion(w=ee_rot_qw, x=ee_rot_qx, y=ee_rot_qy, z=ee_rot_qz)
+        rot_arr = self.quat2zyx(q=qrot)
+        ee_rot_phi, ee_rot_theta, ee_rot_psi = rot_arr[0], rot_arr[1], rot_arr[2]
                 
-        return (ee_pos_x, ee_pos_y, ee_pos_z)
+        return (ee_pos_x, ee_pos_y, ee_pos_z, ee_rot_phi, ee_rot_theta, ee_rot_psi)
+
 
     def get_joint_pos(
         self,
@@ -275,7 +329,10 @@ class TrajDemo(Node):
 
         for waypoint in cartesian_waypoints:
             
-            pos = waypoint["position"]
+            # pos = waypoint["position"]
+            pos = waypoint.get("position", None)
+            ori = waypoint.get("orientation", None)
+                
             time_sec = waypoint["time"] + time_since_start
             print(f"Waypoint pos: {pos}")
             print(f"Waypoint time: {time_sec}")
@@ -285,7 +342,13 @@ class TrajDemo(Node):
             # time_since_start += time_sec
             time_since_start = time_sec
 
-            goal_joint_pos = self.get_joint_pos(cur_joint_pos, pos)
+            goal_joint_pos = None
+            
+            if ori:
+                goal_joint_pos = self.get_joint_pos(cur_joint_pos, pos, ori)
+            else:
+                goal_joint_pos = self.get_joint_pos(cur_joint_pos, pos)
+            
             goal_positions.append(goal_joint_pos)
 
         # TODO: instantiate a JointTrajectory message, populate it, and publish it via the publisher class member
@@ -299,6 +362,9 @@ class TrajDemo(Node):
         for i, gpos in enumerate(goal_positions):
             joint_traj.points.append(JointTrajectoryPoint(positions=gpos, time_from_start=Duration(seconds=float(goal_times[i])).to_msg()))
 
+        self.traj_planned_duration = goal_times[-1]
+        print(f"Planned Trajectory Duration: {self.traj_planned_duration}")
+
         return joint_traj
 
     def plot_joint_traj(self):
@@ -309,12 +375,17 @@ class TrajDemo(Node):
         ee_x_arr = np.array(self.ee_x_all)
         ee_y_arr = np.array(self.ee_y_all)
         ee_z_arr = np.array(self.ee_z_all)
-        time_arr = np.array(self.times_all)
 
+        # self.joint_pos_all = []
+        # self.joint_vel_all = []
+
+        if self.traj_start_ns is not None and self.traj_end_ns is not None:
+            print(f"Measured duration: {(self.traj_end_ns - self.traj_start_ns) * 1e-9:.2f} s")
+            print(f"Planned duration: {self.traj_planned_duration:.2f} s")
 
         fig = plt.figure()
         ax = fig.add_subplot(projection="3d")
-        ax.plot(ee_x_arr, ee_y_arr, ee_z_arr, label="EE path")
+        ax.plot(ee_x_arr, ee_y_arr, ee_z_arr, label="EE path", c='m')
 
         # overlay the commanded cartesian waypoints 
         wps = np.array([w["position"] for w in self.traj_cfg["waypoints"]["cartesion"]])    
